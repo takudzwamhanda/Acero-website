@@ -25,7 +25,7 @@ const Hero: React.FC = () => {
           backgroundImage: `url('/images/rect-tube.jfif')`
         }}
       />
-      <div className="relative z-10 container mx-auto px-4 py-20 lg:py-32">
+      <div className="relative z-10 container mx-auto px-4 pt-32 pb-20 lg:py-32">
         <div className="max-w-4xl">
           <h1 className="text-5xl lg:text-7xl font-bold mb-6 leading-tight animate-fade-in-up animate-delay-200">
             <span className="text-yellow-400">ACERO</span>
