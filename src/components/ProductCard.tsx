@@ -1,6 +1,8 @@
 import React from 'react';
 import { ShoppingCart, Info } from 'lucide-react';
 import { useCart } from '@/contexts/CartContext';
+import { useAuth } from '@/contexts/AuthContext';
+import AuthGuard from './AuthGuard';
 
 interface ProductCardProps {
   id: string;
@@ -22,6 +24,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
   category
 }) => {
   const { addItem } = useCart();
+  const { isAuthenticated } = useAuth();
 
   const handleAddToCart = () => {
     addItem({
@@ -68,13 +71,24 @@ const ProductCard: React.FC<ProductCardProps> = ({
           </div>
         </div>
         <div className="flex gap-2">
-          <button 
-            onClick={handleAddToCart}
-            className="flex-1 bg-yellow-400 hover:bg-yellow-500 text-slate-900 py-2 px-4 rounded-lg font-semibold transition-colors flex items-center justify-center gap-2 btn-enhanced ripple-effect"
-          >
-            <ShoppingCart className="h-4 w-4" />
-            Add to Cart
-          </button>
+          {isAuthenticated ? (
+            <button 
+              onClick={handleAddToCart}
+              className="flex-1 bg-yellow-400 hover:bg-yellow-500 text-slate-900 py-2 px-4 rounded-lg font-semibold transition-colors flex items-center justify-center gap-2 btn-enhanced ripple-effect"
+            >
+              <ShoppingCart className="h-4 w-4" />
+              Add to Cart
+            </button>
+          ) : (
+            <AuthGuard action="cart">
+              <button 
+                className="flex-1 bg-yellow-400 hover:bg-yellow-500 text-slate-900 py-2 px-4 rounded-lg font-semibold transition-colors flex items-center justify-center gap-2 btn-enhanced ripple-effect"
+              >
+                <ShoppingCart className="h-4 w-4" />
+                Add to Cart
+              </button>
+            </AuthGuard>
+          )}
           <button 
             onClick={handleInfo}
             className="bg-slate-100 hover:bg-slate-200 text-slate-700 p-2 rounded-lg transition-colors"

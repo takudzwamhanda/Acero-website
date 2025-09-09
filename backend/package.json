@@ -1,0 +1,41 @@
+{
+  "name": "acero-backend",
+  "version": "1.0.0",
+  "description": "Acero Steel Supply Backend API",
+  "main": "auth-service.js",
+  "scripts": {
+    "start": "node auth-service.js",
+    "dev": "nodemon auth-service.js",
+    "test": "jest",
+    "migrate": "node scripts/migrate.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "bcryptjs": "^2.4.3",
+    "jsonwebtoken": "^9.0.2",
+    "express-rate-limit": "^7.1.5",
+    "helmet": "^7.1.0",
+    "cors": "^2.8.5",
+    "pg": "^8.11.3",
+    "nodemailer": "^6.9.7",
+    "validator": "^13.11.0",
+    "dotenv": "^16.3.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2",
+    "jest": "^29.7.0",
+    "supertest": "^6.3.3"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": [
+    "steel",
+    "supply",
+    "ecommerce",
+    "api",
+    "authentication"
+  ],
+  "author": "Acero Steel Supply",
+  "license": "MIT"
+}

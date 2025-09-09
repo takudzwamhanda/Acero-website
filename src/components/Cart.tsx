@@ -202,7 +202,7 @@ const Cart: React.FC = () => {
   };
 
   const openWhatsApp = (orderSummary: string) => {
-    const phoneNumber = '263772280562'; // Your WhatsApp number
+    const phoneNumber = '263774637836'; // Your WhatsApp number
     const message = encodeURIComponent(orderSummary);
     const whatsappUrl = `https://wa.me/${phoneNumber}?text=${message}`;
     window.open(whatsappUrl, '_blank');
@@ -217,7 +217,7 @@ const Cart: React.FC = () => {
   };
 
   const openSMS = (orderSummary: string) => {
-    const phoneNumber = '263772280562';
+    const phoneNumber = '263774637836';
     const message = encodeURIComponent(orderSummary);
     const smsUrl = `sms:${phoneNumber}?body=${message}`;
     window.open(smsUrl);

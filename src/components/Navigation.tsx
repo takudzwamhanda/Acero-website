@@ -1,11 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { Menu, X, Phone, Mail, ShoppingCart } from 'lucide-react';
+import { Menu, X, Phone, Mail, ShoppingCart, User, LogOut } from 'lucide-react';
 import { useCart } from '@/contexts/CartContext';
+import { useAuth } from '@/contexts/AuthContext';
+import AuthModal from './AuthModal';
 
 const Navigation: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
   const { toggleCart, getTotalItems } = useCart();
+  const { user, isAuthenticated, logout } = useAuth();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -48,11 +52,11 @@ const Navigation: React.FC = () => {
         <div className="container mx-auto px-4">
           <div className="flex justify-between items-center py-2 text-sm">
             <a 
-              href="tel:+263772280562" 
+              href="tel:+263774637836" 
               className={`flex items-center space-x-1 ${isScrolled ? 'text-slate-600 hover:text-blue-600' : 'text-white hover:text-yellow-400'} transition-colors`}
             >
               <Phone className="h-3 w-3" />
-              <span>+263 772 280 562</span>
+              <span>+263 77 463 7836</span>
             </a>
             <a 
               href="mailto:info@acerosteel.com" 
@@ -87,6 +91,33 @@ const Navigation: React.FC = () => {
               </button>
             ))}
             
+            {/* Auth Button */}
+            {isAuthenticated ? (
+              <div className="flex items-center space-x-4">
+                <div className="flex items-center space-x-2">
+                  <User className="h-4 w-4" />
+                  <span className={`text-sm ${isScrolled ? 'text-slate-700' : 'text-white'}`}>
+                    {user?.name}
+                  </span>
+                </div>
+                <button
+                  onClick={logout}
+                  className={`${isScrolled ? 'text-slate-700 hover:text-blue-600' : 'text-white hover:text-yellow-400'} transition-colors`}
+                  title="Logout"
+                >
+                  <LogOut className="h-5 w-5" />
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => setShowAuthModal(true)}
+                className={`${isScrolled ? 'text-slate-700 hover:text-blue-600' : 'text-white hover:text-yellow-400'} transition-colors flex items-center space-x-1`}
+              >
+                <User className="h-5 w-5" />
+                <span>Sign In</span>
+              </button>
+            )}
+
             {/* Cart Button */}
             <button
               onClick={toggleCart}
@@ -124,8 +155,32 @@ const Navigation: React.FC = () => {
                 </button>
               ))}
               
-              {/* Mobile Cart Button */}
-              <div className="pt-4 border-t border-slate-200">
+              {/* Mobile Auth Section */}
+              <div className="pt-4 border-t border-slate-200 space-y-3">
+                {isAuthenticated ? (
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <User className="h-4 w-4" />
+                      <span className="text-slate-700">{user?.name}</span>
+                    </div>
+                    <button
+                      onClick={logout}
+                      className="text-slate-700 hover:text-blue-600 transition-colors"
+                    >
+                      <LogOut className="h-4 w-4" />
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => setShowAuthModal(true)}
+                    className="w-full flex items-center justify-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-semibold transition-colors"
+                  >
+                    <User className="h-5 w-5" />
+                    <span>Sign In</span>
+                  </button>
+                )}
+                
+                {/* Mobile Cart Button */}
                 <button
                   onClick={toggleCart}
                   className="w-full flex items-center justify-center space-x-2 bg-yellow-400 hover:bg-yellow-500 text-slate-900 px-6 py-2 rounded-lg font-semibold transition-colors"
@@ -138,6 +193,13 @@ const Navigation: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* Auth Modal */}
+      <AuthModal
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+        initialMode="login"
+      />
     </nav>
   );
 };

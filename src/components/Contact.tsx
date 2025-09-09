@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { Phone, Mail, MapPin, Clock, Send } from 'lucide-react';
 import { useCart } from '@/contexts/CartContext';
+import { useAuth } from '@/contexts/AuthContext';
+import AuthGuard from './AuthGuard';
 
 const Contact: React.FC = () => {
   const [formData, setFormData] = useState({
@@ -12,6 +14,19 @@ const Contact: React.FC = () => {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { items, getTotalPrice, clearCart } = useCart();
+  const { user, isAuthenticated } = useAuth();
+
+  // Pre-fill form with user data if authenticated
+  React.useEffect(() => {
+    if (isAuthenticated && user) {
+      setFormData(prev => ({
+        ...prev,
+        name: user.name || '',
+        email: user.email || '',
+        phone: user.phone || ''
+      }));
+    }
+  }, [isAuthenticated, user]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -171,7 +186,7 @@ const Contact: React.FC = () => {
   };
 
   const openWhatsApp = (message: string) => {
-    const phoneNumber = '263772280562';
+    const phoneNumber = '263774637836';
     const whatsappMessage = encodeURIComponent(message);
     const whatsappUrl = `https://wa.me/${phoneNumber}?text=${whatsappMessage}`;
     window.open(whatsappUrl, '_blank');
@@ -230,10 +245,10 @@ const Contact: React.FC = () => {
                 <div>
                   <h4 className="font-semibold text-slate-800">Phone</h4>
                   <a 
-                    href="tel:+263772280562" 
+                    href="tel:+263774637836" 
                     className="text-slate-600 hover:text-blue-600 transition-colors"
                   >
-                    +263 772 280 562
+                    +263 77 463 7836
                   </a>
                   <p className="text-sm text-slate-500">Mon-Fri: 7AM-6PM</p>
                 </div>
@@ -339,23 +354,35 @@ const Contact: React.FC = () => {
                 required
               ></textarea>
               
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="w-full bg-yellow-400 hover:bg-yellow-500 disabled:bg-yellow-300 text-slate-900 py-3 px-6 rounded-lg font-semibold transition-colors flex items-center justify-center space-x-2 btn-enhanced ripple-effect"
-              >
-                {isSubmitting ? (
-                  <>
-                    <div className="loading-spinner w-5 h-5 border-2 border-slate-900 border-t-transparent rounded-full"></div>
-                    <span>Sending...</span>
-                  </>
-                ) : (
-                  <>
-                <Send className="h-5 w-5" />
-                <span>Send Message</span>
-                  </>
-                )}
-              </button>
+              {isAuthenticated ? (
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="w-full bg-yellow-400 hover:bg-yellow-500 disabled:bg-yellow-300 text-slate-900 py-3 px-6 rounded-lg font-semibold transition-colors flex items-center justify-center space-x-2 btn-enhanced ripple-effect"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <div className="loading-spinner w-5 h-5 border-2 border-slate-900 border-t-transparent rounded-full"></div>
+                      <span>Sending...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Send className="h-5 w-5" />
+                      <span>Send Message</span>
+                    </>
+                  )}
+                </button>
+              ) : (
+                <AuthGuard action="contact">
+                  <button
+                    type="button"
+                    className="w-full bg-yellow-400 hover:bg-yellow-500 text-slate-900 py-3 px-6 rounded-lg font-semibold transition-colors flex items-center justify-center space-x-2 btn-enhanced ripple-effect"
+                  >
+                    <Send className="h-5 w-5" />
+                    <span>Send Message</span>
+                  </button>
+                </AuthGuard>
+              )}
             </form>
           </div>
         </div>

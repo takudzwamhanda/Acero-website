@@ -1,7 +1,11 @@
 import React from 'react';
 import { ArrowRight } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import AuthGuard from './AuthGuard';
 
 const Hero: React.FC = () => {
+  const { isAuthenticated } = useAuth();
+  
   const scrollToSection = (href: string) => {
     const element = document.querySelector(href);
     if (element) {
@@ -43,12 +47,22 @@ const Hero: React.FC = () => {
               Browse Products
               <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
             </button>
-            <button 
-              onClick={handleGetQuote}
-              className="border-2 border-white text-white hover:bg-white hover:text-slate-900 px-8 py-4 rounded-lg font-semibold text-lg transition-all duration-300 btn-enhanced ripple-effect"
-            >
-              Get Quote
-            </button>
+            {isAuthenticated ? (
+              <button 
+                onClick={handleGetQuote}
+                className="border-2 border-white text-white hover:bg-white hover:text-slate-900 px-8 py-4 rounded-lg font-semibold text-lg transition-all duration-300 btn-enhanced ripple-effect"
+              >
+                Get Quote
+              </button>
+            ) : (
+              <AuthGuard action="quote">
+                <button 
+                  className="border-2 border-white text-white hover:bg-white hover:text-slate-900 px-8 py-4 rounded-lg font-semibold text-lg transition-all duration-300 btn-enhanced ripple-effect"
+                >
+                  Get Quote
+                </button>
+              </AuthGuard>
+            )}
           </div>
         </div>
       </div>

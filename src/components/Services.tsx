@@ -14,7 +14,7 @@ const Services: React.FC = () => {
   };
 
   const handleCallNow = () => {
-    window.open('tel:+263772280562', '_self');
+    window.open('tel:+263774637836', '_self');
   };
 
   const services = [
@@ -76,7 +76,7 @@ const Services: React.FC = () => {
               onClick={handleCallNow}
               className="border-2 border-slate-900 text-slate-900 hover:bg-slate-900 hover:text-white px-8 py-3 rounded-lg font-semibold transition-colors btn-enhanced ripple-effect"
             >
-              Call Now: +263 772 280 562
+              Call Now: +263 77 463 7836
             </button>
           </div>
         </div>
