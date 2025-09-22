@@ -1,69 +1,14 @@
 import React, { useState } from 'react';
 import ProductCard from './ProductCard';
 import { Filter, Search } from 'lucide-react';
+import { steelProducts, productCategories } from '@/data/steelProducts';
 
 const ProductGrid: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [searchTerm, setSearchTerm] = useState('');
 
-  const products = [
-    {
-      id: 'round-steel-bar',
-      name: 'Round Steel Bar',
-      image: '/images/istockphoto-2165812916-1024x1024.jpg',
-      retailPrice: '$12.50/ft',
-      wholesalePrice: '$9.80/ft',
-      specifications: '1/2" - 4" diameter, Grade A36',
-      category: 'Round Bars'
-    },
-    {
-      id: 'heavy-duty-round-bar',
-      name: 'Heavy Duty Round Bar',
-      image: '/images/istockphoto-2165812916-1024x1024.jpg',
-      retailPrice: '$18.75/ft',
-      wholesalePrice: '$14.60/ft',
-      specifications: '2" - 6" diameter, Grade A572',
-      category: 'Round Bars'
-    },
-    {
-      id: 'square-steel-tube',
-      name: 'Square Steel Tube',
-      image: '/images/istockphoto-2165812916-1024x1024.jpg',
-      retailPrice: '$15.25/ft',
-      wholesalePrice: '$11.90/ft',
-      specifications: '1" x 1" to 4" x 4", 14-16 gauge',
-      category: 'Square Tubes'
-    },
-    {
-      id: 'heavy-square-tube',
-      name: 'Heavy Square Tube',
-      image: '/images/istockphoto-2165812916-1024x1024.jpg',
-      retailPrice: '$22.40/ft',
-      wholesalePrice: '$17.80/ft',
-      specifications: '3" x 3" to 6" x 6", 11-14 gauge',
-      category: 'Square Tubes'
-    },
-    {
-      id: 'angle-iron-l-beam',
-      name: 'Angle Iron L-Beam',
-      image: '/images/istockphoto-2165812916-1024x1024.jpg',
-      retailPrice: '$8.95/ft',
-      wholesalePrice: '$6.75/ft',
-      specifications: '1" x 1" to 3" x 3", 1/8" - 1/4" thick',
-      category: 'Angle Iron'
-    },
-    {
-      id: 'heavy-angle-iron',
-      name: 'Heavy Angle Iron',
-      image: '/images/istockphoto-2165812916-1024x1024.jpg',
-      retailPrice: '$16.30/ft',
-      wholesalePrice: '$12.50/ft',
-      specifications: '4" x 4" to 6" x 6", 1/4" - 3/8" thick',
-      category: 'Angle Iron'
-    }
-  ];
-
-  const categories = ['All', 'Round Bars', 'Square Tubes', 'Angle Iron'];
+  const products = steelProducts;
+  const categories = productCategories;
 
   const filteredProducts = products.filter(product => {
     const matchesCategory = selectedCategory === 'All' || product.category === selectedCategory;
@@ -77,7 +22,7 @@ const ProductGrid: React.FC = () => {
         <div className="text-center mb-12">
           <h2 className="text-4xl font-bold text-slate-800 mb-4">Our Steel Products</h2>
           <p className="text-xl text-slate-600 max-w-2xl mx-auto">
-            Premium quality steel products for construction, manufacturing, and industrial applications
+            Premium quality steel tubes, angles, and bars for construction, manufacturing, and industrial applications
           </p>
         </div>
 

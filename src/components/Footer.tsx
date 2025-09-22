@@ -63,7 +63,8 @@ const Footer: React.FC = () => {
               </div>
               <div className="flex items-start space-x-2">
                 <MapPin className="h-4 w-4 text-yellow-400 mt-1" />
-                <span>123 Industrial Blvd<br />Steel City, SC 12345</span>
+                <span>Harare Rd<br />
+                Mbare,Magaba</span>
               </div>
               <div className="flex items-start space-x-2">
                 <Clock className="h-4 w-4 text-yellow-400 mt-1" />
@@ -74,7 +75,7 @@ const Footer: React.FC = () => {
         </div>
 
         <div className="border-t border-slate-700 mt-8 pt-8 text-center text-slate-400">
-          <p>&copy; 2024 Acero Steel Supply. All rights reserved. | Privacy Policy | Terms of Service</p>
+          <p>&copy; 2025 Acero Steel Supply. All rights reserved. | Privacy Policy | Terms of Service</p>
         </div>
       </div>
     </footer>

@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { apiService, type User, type LoginCredentials, type RegisterData } from '@/services/api';
+import { mockApiService } from '@/services/mockApi';
 
 // User interface is now imported from api service
 
@@ -56,7 +57,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setIsLoading(true);
       
       const credentials: LoginCredentials = { email, password };
-      const response = await apiService.login(credentials);
+      
+      // Try real API first, fallback to mock API
+      let response;
+      try {
+        response = await apiService.login(credentials);
+      } catch (error) {
+        console.log('Real API not available, using mock API');
+        response = await mockApiService.login(credentials);
+      }
       
       if (response.data) {
         setUser(response.data.user);
@@ -91,7 +100,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         company
       };
       
-      const response = await apiService.register(userData);
+      // Try real API first, fallback to mock API
+      let response;
+      try {
+        response = await apiService.register(userData);
+      } catch (error) {
+        console.log('Real API not available, using mock API');
+        response = await mockApiService.register(userData);
+      }
       
       if (response.data) {
         setUser(response.data.user);
@@ -110,18 +126,33 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const logout = async () => {
     try {
-      await apiService.logout();
+      // Try real API first, fallback to mock API
+      try {
+        await apiService.logout();
+      } catch (error) {
+        console.log('Real API not available, using mock API');
+        await mockApiService.logout();
+      }
     } catch (error) {
       console.error('Logout error:', error);
     } finally {
       setUser(null);
       apiService.clearToken();
+      mockApiService.clearToken();
     }
   };
 
   const updateProfile = async (updates: Partial<User>) => {
     try {
-      const response = await apiService.updateProfile(updates);
+      // Try real API first, fallback to mock API
+      let response;
+      try {
+        response = await apiService.updateProfile(updates);
+      } catch (error) {
+        console.log('Real API not available, using mock API');
+        response = await mockApiService.updateProfile(updates);
+      }
+      
       if (response.data) {
         setUser(response.data.user);
       }
