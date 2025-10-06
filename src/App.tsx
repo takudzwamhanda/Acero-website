@@ -7,6 +7,8 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "@/components/theme-provider";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
+import EmailVerification from "./pages/EmailVerification";
+import PhoneLogin from "./pages/PhoneLogin";
 
 const queryClient = new QueryClient();
 
@@ -19,6 +21,8 @@ const App = () => (
         <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
           <Routes>
             <Route path="/" element={<Index />} />
+            <Route path="/verify-email" element={<EmailVerification />} />
+            <Route path="/phone-login" element={<PhoneLogin />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

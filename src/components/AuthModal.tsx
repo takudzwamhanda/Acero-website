@@ -72,7 +72,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode = 'l
       
       if (mode === 'login') {
         success = await login(formData.email, formData.password);
-      } else {
+      } else if (mode === 'register') {
         success = await register(
           formData.email,
           formData.password,
@@ -80,9 +80,17 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode = 'l
           formData.phone,
           formData.company
         );
+        
+        if (success) {
+          setErrors({ general: 'Registration successful! Please check your email to verify your account.' });
+          setTimeout(() => {
+            onClose();
+          }, 3000);
+          return;
+        }
       }
 
-      if (success) {
+      if (success && mode !== 'register') {
         onClose();
         setFormData({
           email: '',
@@ -92,7 +100,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode = 'l
           company: '',
           confirmPassword: ''
         });
-      } else {
+      } else if (!success) {
         setErrors({ general: mode === 'login' ? 'Invalid credentials' : 'Registration failed' });
       }
     } catch (error) {
@@ -197,9 +205,9 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode = 'l
                 name="email"
                 value={formData.email}
                 onChange={handleInputChange}
-                  className={`w-full pl-10 pr-4 py-2 border-2 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 bg-slate-50 ${
-                    errors.email ? 'border-red-400' : 'border-slate-400'
-                  }`}
+                className={`w-full pl-10 pr-4 py-2 border-2 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 bg-slate-50 ${
+                  errors.email ? 'border-red-400' : 'border-slate-400'
+                }`}
                 placeholder="Enter your email"
               />
             </div>
@@ -244,53 +252,57 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode = 'l
             </>
           )}
 
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">
-              Password *
-            </label>
-            <div className="relative">
-              <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-500" />
-              <input
-                type={showPassword ? 'text' : 'password'}
-                name="password"
-                value={formData.password}
-                onChange={handleInputChange}
-                  className={`w-full pl-10 pr-12 py-2 border-2 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 bg-slate-50 ${
-                    errors.password ? 'border-red-400' : 'border-slate-400'
-                  }`}
-                placeholder="Enter your password"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-500 hover:text-slate-600"
-              >
-                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-              </button>
-            </div>
-            {errors.password && <p className="text-red-500 text-sm mt-1">{errors.password}</p>}
-          </div>
-
-          {mode === 'register' && (
-            <div>
-              <label className="block text-sm font-medium text-slate-800 mb-1">
-                Confirm Password *
-              </label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-500" />
-                <input
-                  type="password"
-                  name="confirmPassword"
-                  value={formData.confirmPassword}
-                  onChange={handleInputChange}
-                  className={`w-full pl-10 pr-4 py-2 border-2 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 bg-slate-50 ${
-                    errors.confirmPassword ? 'border-red-400' : 'border-slate-400'
-                  }`}
-                  placeholder="Confirm your password"
-                />
+          {mode !== 'phone' && (
+            <>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">
+                  Password *
+                </label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-500" />
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    name="password"
+                    value={formData.password}
+                    onChange={handleInputChange}
+                    className={`w-full pl-10 pr-12 py-2 border-2 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 bg-slate-50 ${
+                      errors.password ? 'border-red-400' : 'border-slate-400'
+                    }`}
+                    placeholder="Enter your password"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-500 hover:text-slate-600"
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+                {errors.password && <p className="text-red-500 text-sm mt-1">{errors.password}</p>}
               </div>
-              {errors.confirmPassword && <p className="text-red-500 text-sm mt-1">{errors.confirmPassword}</p>}
-            </div>
+
+              {mode === 'register' && (
+                <div>
+                  <label className="block text-sm font-medium text-slate-800 mb-1">
+                    Confirm Password *
+                  </label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-500" />
+                    <input
+                      type="password"
+                      name="confirmPassword"
+                      value={formData.confirmPassword}
+                      onChange={handleInputChange}
+                      className={`w-full pl-10 pr-4 py-2 border-2 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 bg-slate-50 ${
+                        errors.confirmPassword ? 'border-red-400' : 'border-slate-400'
+                      }`}
+                      placeholder="Confirm your password"
+                    />
+                  </div>
+                  {errors.confirmPassword && <p className="text-red-500 text-sm mt-1">{errors.confirmPassword}</p>}
+                </div>
+              )}
+            </>
           )}
 
           <button
@@ -298,20 +310,45 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode = 'l
             disabled={isSubmitting}
             className="w-full bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 disabled:from-yellow-300 disabled:to-yellow-400 text-slate-900 py-3 px-4 rounded-lg font-semibold transition-all duration-200 shadow-lg hover:shadow-xl border-2 border-yellow-400"
           >
-            {isSubmitting ? 'Please wait...' : (mode === 'login' ? 'Sign In' : 'Create Account')}
+            {isSubmitting ? 'Please wait...' : 
+             mode === 'login' ? 'Sign In' : 
+             mode === 'register' ? 'Create Account' : 
+             'Send Login Link'}
           </button>
 
-          <div className="text-center">
-            <button
-              type="button"
-              onClick={switchMode}
-              className="text-slate-700 hover:text-yellow-600 font-medium transition-colors"
-            >
-              {mode === 'login' 
-                ? "Don't have an account? Sign up" 
-                : "Already have an account? Sign in"
-              }
-            </button>
+          <div className="text-center space-y-2">
+            {mode === 'phone' ? (
+              <>
+                <button
+                  type="button"
+                  onClick={() => switchMode('login')}
+                  className="text-slate-700 hover:text-yellow-600 font-medium transition-colors block w-full"
+                >
+                  Use Email & Password Instead
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  type="button"
+                  onClick={() => switchMode()}
+                  className="text-slate-700 hover:text-yellow-600 font-medium transition-colors block w-full"
+                >
+                  {mode === 'login' 
+                    ? "Don't have an account? Sign up" 
+                    : "Already have an account? Sign in"
+                  }
+                </button>
+                <button
+                  type="button"
+                  onClick={() => switchMode('phone')}
+                  className="text-blue-600 hover:text-blue-700 font-medium transition-colors text-sm flex items-center justify-center w-full"
+                >
+                  <Phone className="h-4 w-4 mr-1" />
+                  Login with Phone Number
+                </button>
+              </>
+            )}
           </div>
 
         </form>

@@ -71,6 +71,10 @@ const generateRefreshToken = () => {
   return crypto.randomBytes(32).toString('hex');
 };
 
+const generateVerificationToken = () => {
+  return crypto.randomBytes(32).toString('hex');
+};
+
 const hashPassword = async (password) => {
   const saltRounds = 12;
   return await bcrypt.hash(password, saltRounds);
@@ -94,6 +98,101 @@ const validatePhone = (phone) => {
   if (!phone) return true; // Phone is optional
   const phoneRegex = /^\+?[1-9]\d{1,14}$/;
   return phoneRegex.test(phone);
+};
+
+// Email verification functions
+const sendVerificationEmail = async (email, userId) => {
+  try {
+    const token = generateVerificationToken();
+    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+    
+    // Store verification token
+    await pool.query(
+      'INSERT INTO email_verification_tokens (user_id, token, expires_at) VALUES ($1, $2, $3)',
+      [userId, token, expiresAt]
+    );
+    
+    const verificationUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/verify-email?token=${token}`;
+    
+    const mailOptions = {
+      from: process.env.SMTP_USER,
+      to: email,
+      subject: 'Verify Your Email - Acero Steel Supply',
+      html: `
+        <div style="max-width: 600px; margin: 0 auto; padding: 20px; font-family: Arial, sans-serif;">
+          <div style="text-align: center; margin-bottom: 30px;">
+            <h1 style="color: #1e40af; margin-bottom: 10px;">🔩 Acero Steel Supply</h1>
+            <h2 style="color: #374151; margin-bottom: 20px;">Verify Your Email Address</h2>
+          </div>
+          
+          <div style="background: #f8fafc; padding: 30px; border-radius: 10px; margin-bottom: 30px;">
+            <p style="color: #374151; font-size: 16px; line-height: 1.6; margin-bottom: 20px;">
+              Thank you for registering with Acero Steel Supply! To complete your registration and secure your account, please verify your email address by clicking the button below.
+            </p>
+            
+            <div style="text-align: center; margin: 30px 0;">
+              <a href="${verificationUrl}" 
+                 style="background: linear-gradient(135deg, #3b82f6, #1d4ed8); 
+                        color: white; 
+                        padding: 15px 30px; 
+                        text-decoration: none; 
+                        border-radius: 8px; 
+                        font-weight: bold; 
+                        display: inline-block;
+                        box-shadow: 0 4px 6px rgba(59, 130, 246, 0.3);">
+                ✅ Verify Email Address
+              </a>
+            </div>
+            
+            <p style="color: #6b7280; font-size: 14px; margin-top: 20px;">
+              If the button doesn't work, copy and paste this link into your browser:<br>
+              <a href="${verificationUrl}" style="color: #3b82f6; word-break: break-all;">${verificationUrl}</a>
+            </p>
+          </div>
+          
+          <div style="border-top: 1px solid #e5e7eb; padding-top: 20px;">
+            <p style="color: #6b7280; font-size: 12px; text-align: center;">
+              This verification link will expire in 24 hours. If you didn't create an account with Acero Steel Supply, please ignore this email.
+            </p>
+            <p style="color: #6b7280; font-size: 12px; text-align: center; margin-top: 10px;">
+              © ${new Date().getFullYear()} Acero Steel Supply. All rights reserved.
+            </p>
+          </div>
+        </div>
+      `
+    };
+    
+    await transporter.sendMail(mailOptions);
+    console.log('Verification email sent to:', email);
+    return true;
+  } catch (error) {
+    console.error('Error sending verification email:', error);
+    return false;
+  }
+};
+
+const sendPhoneVerificationLink = async (phone, userId) => {
+  try {
+    const token = generateVerificationToken();
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes for phone links
+    
+    // Store phone verification token
+    await pool.query(
+      'INSERT INTO phone_verification_tokens (user_id, token, expires_at, phone) VALUES ($1, $2, $3, $4)',
+      [userId, token, expiresAt, phone]
+    );
+    
+    const verificationUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/phone-login?token=${token}`;
+    
+    // In a real implementation, you would send this via SMS
+    // For now, we'll log it (you can integrate with Twilio, etc.)
+    console.log(`Phone verification link for ${phone}: ${verificationUrl}`);
+    
+    return { success: true, url: verificationUrl };
+  } catch (error) {
+    console.error('Error generating phone verification link:', error);
+    return { success: false, error: error.message };
+  }
 };
 
 // Audit logging
@@ -233,8 +332,11 @@ app.post('/api/auth/register', async (req, res) => {
     // Log audit
     await logAudit(user.id, 'user_registered', 'user', user.id, ip, userAgent);
 
-    // Send verification email (optional)
-    // await sendVerificationEmail(user.email, user.id);
+    // Send verification email
+    const emailSent = await sendVerificationEmail(user.email, user.id);
+    if (!emailSent) {
+      console.warn('Failed to send verification email, but registration continues');
+    }
 
     res.status(201).json({
       message: 'User registered successfully',
@@ -323,6 +425,196 @@ app.post('/api/auth/login', async (req, res) => {
 
   } catch (error) {
     console.error('Login error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Email verification endpoint
+app.get('/api/auth/verify-email', async (req, res) => {
+  try {
+    const { token } = req.query;
+    
+    if (!token) {
+      return res.status(400).json({ error: 'Verification token is required' });
+    }
+    
+    // Find and validate token
+    const tokenResult = await pool.query(
+      'SELECT * FROM email_verification_tokens WHERE token = $1 AND used = false AND expires_at > NOW()',
+      [token]
+    );
+    
+    if (tokenResult.rows.length === 0) {
+      return res.status(400).json({ error: 'Invalid or expired verification token' });
+    }
+    
+    const verificationToken = tokenResult.rows[0];
+    
+    // Update user as verified
+    await pool.query(
+      'UPDATE users SET email_verified = true WHERE id = $1',
+      [verificationToken.user_id]
+    );
+    
+    // Mark token as used
+    await pool.query(
+      'UPDATE email_verification_tokens SET used = true WHERE id = $1',
+      [verificationToken.id]
+    );
+    
+    // Log audit
+    await logAudit(verificationToken.user_id, 'email_verified', 'user', verificationToken.user_id, req.ip, req.get('User-Agent'));
+    
+    res.json({ message: 'Email verified successfully' });
+  } catch (error) {
+    console.error('Email verification error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Resend verification email
+app.post('/api/auth/resend-verification', async (req, res) => {
+  try {
+    const { email } = req.body;
+    
+    if (!email || !validateEmail(email)) {
+      return res.status(400).json({ error: 'Valid email is required' });
+    }
+    
+    // Find user
+    const userResult = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
+    if (userResult.rows.length === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    
+    const user = userResult.rows[0];
+    
+    if (user.email_verified) {
+      return res.status(400).json({ error: 'Email is already verified' });
+    }
+    
+    // Invalidate old tokens
+    await pool.query(
+      'UPDATE email_verification_tokens SET used = true WHERE user_id = $1 AND used = false',
+      [user.id]
+    );
+    
+    // Send new verification email
+    const emailSent = await sendVerificationEmail(user.email, user.id);
+    
+    if (emailSent) {
+      res.json({ message: 'Verification email sent successfully' });
+    } else {
+      res.status(500).json({ error: 'Failed to send verification email' });
+    }
+  } catch (error) {
+    console.error('Resend verification error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Phone authentication link
+app.post('/api/auth/phone-link', async (req, res) => {
+  try {
+    const { phone } = req.body;
+    
+    if (!phone || !validatePhone(phone)) {
+      return res.status(400).json({ error: 'Valid phone number is required' });
+    }
+    
+    // Find user by phone
+    const userResult = await pool.query('SELECT * FROM users WHERE phone = $1', [phone]);
+    if (userResult.rows.length === 0) {
+      return res.status(404).json({ error: 'No account found with this phone number' });
+    }
+    
+    const user = userResult.rows[0];
+    
+    if (!user.is_active) {
+      return res.status(401).json({ error: 'Account is deactivated' });
+    }
+    
+    // Generate phone verification link
+    const result = await sendPhoneVerificationLink(phone, user.id);
+    
+    if (result.success) {
+      res.json({ 
+        message: 'Authentication link sent to your phone',
+        // In development, return the URL for testing
+        ...(process.env.NODE_ENV === 'development' && { url: result.url })
+      });
+    } else {
+      res.status(500).json({ error: 'Failed to generate authentication link' });
+    }
+  } catch (error) {
+    console.error('Phone link error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Phone authentication verification
+app.get('/api/auth/verify-phone', async (req, res) => {
+  try {
+    const { token } = req.query;
+    
+    if (!token) {
+      return res.status(400).json({ error: 'Verification token is required' });
+    }
+    
+    // Find and validate token
+    const tokenResult = await pool.query(
+      'SELECT * FROM phone_verification_tokens WHERE token = $1 AND used = false AND expires_at > NOW()',
+      [token]
+    );
+    
+    if (tokenResult.rows.length === 0) {
+      return res.status(400).json({ error: 'Invalid or expired verification token' });
+    }
+    
+    const verificationToken = tokenResult.rows[0];
+    
+    // Get user
+    const userResult = await pool.query('SELECT * FROM users WHERE id = $1', [verificationToken.user_id]);
+    if (userResult.rows.length === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    
+    const user = userResult.rows[0];
+    
+    // Mark token as used
+    await pool.query(
+      'UPDATE phone_verification_tokens SET used = true WHERE id = $1',
+      [verificationToken.id]
+    );
+    
+    // Generate JWT tokens
+    const jwtToken = generateToken(user.id);
+    const refreshToken = generateRefreshToken();
+    
+    // Store refresh token
+    await pool.query(
+      'INSERT INTO refresh_tokens (user_id, token, expires_at) VALUES ($1, $2, $3)',
+      [user.id, refreshToken, new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)]
+    );
+    
+    // Log audit
+    await logAudit(user.id, 'phone_login_success', 'user', user.id, req.ip, req.get('User-Agent'));
+    
+    res.json({
+      message: 'Phone authentication successful',
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        phone: user.phone,
+        company: user.company,
+        email_verified: user.email_verified
+      },
+      token: jwtToken,
+      refreshToken
+    });
+  } catch (error) {
+    console.error('Phone verification error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
